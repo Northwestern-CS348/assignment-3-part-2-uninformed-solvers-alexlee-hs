@@ -34,7 +34,22 @@ class TowerOfHanoiGame(GameMaster):
             A Tuple of Tuples that represent the game state
         """
         ### student code goes here
-        pass
+        pegs = []
+        i = 0
+        #loop through pegs
+        while (i < 3):
+            i = i + 1
+            #check for disks on current peg
+            request = parse_input('fact: (on ?disk peg' + str(i) + ')')
+            bndings = self.kb.kb_ask(request)
+            order = []
+            if bndings:
+                for bnding in bndings:
+                    num = (str(bnding.bindings_dict['?disk']))[-1]
+                    order.append(int(num))
+            order = sorted(order)
+            pegs.append(tuple(order))
+        return tuple(pegs)
 
     def makeMove(self, movable_statement):
         """
@@ -53,7 +68,32 @@ class TowerOfHanoiGame(GameMaster):
             None
         """
         ### Student code goes here
-        pass
+        if(movable_statement.predicate == 'movable'):
+            terms = movable_statement.terms
+            gamedata = self.getGameState()
+            diskn = str(terms[0])
+            peg1 = str(terms[1])
+            peg2 = str(terms[2])
+            numpeg1 = int(peg1[-1]) - 1
+            numpeg2 = int(peg2[-1]) - 1
+            #deal with changes to first peg aka peg1
+            self.kb.kb_retract(parse_input('fact: (on '+diskn+' '+peg1+')'))
+            self.kb.kb_retract(parse_input('fact: (ontop '+diskn+' '+peg1+')'))
+            if len(gamedata[numpeg1])<=1:
+                self.kb.kb_add(parse_input('fact: (empty '+peg1+')'))
+            else:
+                self.kb.kb_add(parse_input('fact: (ontop disk'+str(gamedata[numpeg1][1])+' '+ peg1 +')'))
+            
+            #deal with changes to second peg aka peg2
+            self.kb.kb_add(parse_input('fact: (on '+diskn+' '+peg2+')'))
+            if not(gamedata[numpeg2]):
+                self.kb.kb_retract(parse_input('fact: (empty '+peg2+')'))
+            else:
+                self.kb.kb_retract(parse_input('fact: (ontop disk' + str(gamedata[numpeg2][0]) + ' ' + peg2 + ')'))
+            self.kb.kb_add(parse_input('fact: (ontop '+diskn+' '+ peg2 +')'))
+
+
+
 
     def reverseMove(self, movable_statement):
         """
@@ -100,7 +140,24 @@ class Puzzle8Game(GameMaster):
             A Tuple of Tuples that represent the game state
         """
         ### Student code goes here
-        pass
+        rows = []
+        i = 0
+        while (i < 3):
+            j = 0
+            i = i + 1
+            row = []    
+            while j < 3:
+                j = j + 1
+                bnding = self.kb.kb_ask(parse_input("fact: (pos ?tile pos" + str(j) + " " + "pos" + str(i) + ")"))
+                if bnding == False: break
+                tilen =str(bnding[0].bindings_dict['?tile'])[-1]
+                if tilen == 'y':
+                    tilen = -1
+                else:
+                    tilen = int(tilen)
+                row.append(tilen)
+            rows.append(tuple(row))
+        return tuple(rows)
 
     def makeMove(self, movable_statement):
         """
@@ -119,7 +176,18 @@ class Puzzle8Game(GameMaster):
             None
         """
         ### Student code goes here
-        pass
+        if(movable_statement.predicate == 'movable'):
+            terms = movable_statement.terms
+            #takes care of the pos, and rule for empty takes care of movables
+            remov = parse_input('fact: (pos empty '+str(terms[3])+' '+str(terms[4])+')')
+            renew = parse_input('fact: (pos '+str(terms[0])+' '+str(terms[3])+' '+str(terms[4])+')')
+            self.kb.kb_retract(remov)
+            self.kb.kb_assert(renew)
+            remov2 = parse_input('fact: (pos '+str(terms[0])+' '+str(terms[1])+' '+str(terms[2])+')')
+            renew2 = parse_input('fact: (pos empty '+str(terms[1])+' '+str(terms[2])+')')
+            self.kb.kb_retract(remov2)
+            self.kb.kb_assert(renew2)
+
 
     def reverseMove(self, movable_statement):
         """

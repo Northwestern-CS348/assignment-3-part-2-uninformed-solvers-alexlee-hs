@@ -108,8 +108,9 @@ class GameMaster(object):
         """
         listOfBindings = self.kb.kb_ask(self.moveableQuery)
         if listOfBindings:
-            return [instantiate(self.moveableQuery.statement,bindings)\
-                     for bindings in listOfBindings]
+            statements = [instantiate(self.moveableQuery.statement,bindings) for bindings in listOfBindings]
+            statements.sort()
+            return statements
         else:
             return listOfBindings
 
